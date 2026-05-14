@@ -7,23 +7,35 @@ class Mesh:
             self.coordinate = coordinate 
             self.element = element
             self.numbering = numbering-1
+    def x1(self, i):
+        return self.coordinate[self.element[i][0]][0]
+    def x2(self, i):
+        return self.coordinate[self.element[i][1]][0]
+    def x3(self, i):
+        return self.coordinate[self.element[i][2]][0]
+    def y1(self, i):
+        return self.coordinate[self.element[i][0]][1]
+    def y2(self, i):
+        return self.coordinate[self.element[i][1]][1]
+    def y3(self, i):
+        return self.coordinate[self.element[i][2]][1]
     def det_J(self):
-        return (self.coordinate[self.element[self.numbering][1]][0]-self.coordinate[self.element[self.numbering][0]][0])*(self.coordinate[self.element[self.numbering][2]][1]-self.coordinate[self.element[self.numbering][0]][1])-(self.coordinate[self.element[self.numbering][1]][1]-self.coordinate[self.element[self.numbering][0]][1])*(self.coordinate[self.element[self.numbering][2]][0]-self.coordinate[self.element[self.numbering][0]][0])
+        return (self.x2(self.numbering)-self.x1(self.numbering))*(self.y3(self.numbering)-self.y1(self.numbering))-(self.y2(self.numbering)-self.y1(self.numbering))*(self.x3(self.numbering)-self.x1(self.numbering))
     def min_angle(self):
-        a = [self.coordinate[self.element[self.numbering][1]][0]-self.coordinate[self.element[self.numbering][0]][0],self.coordinate[self.element[self.numbering][1]][1]-self.coordinate[self.element[self.numbering][0]][1]]
-        b = [self.coordinate[self.element[self.numbering][2]][0]-self.coordinate[self.element[self.numbering][0]][0],self.coordinate[self.element[self.numbering][2]][1]-self.coordinate[self.element[self.numbering][0]][1]]
-        c = [self.coordinate[self.element[self.numbering][2]][0]-self.coordinate[self.element[self.numbering][1]][0],self.coordinate[self.element[self.numbering][2]][1]-self.coordinate[self.element[self.numbering][1]][1]]
+        a = [self.x2(self.numbering)-self.x1(self.numbering),self.y2(self.numbering)-self.y1(self.numbering)]
+        b = [self.x3(self.numbering)-self.x1(self.numbering),self.y3(self.numbering)-self.y1(self.numbering)]
+        c = [self.x3(self.numbering)-self.x2(self.numbering),self.y3(self.numbering)-self.y2(self.numbering)]
         return min(np.arccos((a[0]*b[0]+a[1]*b[1])/(np.sqrt(a[0]**2+a[1]**2)*np.sqrt(b[0]**2+b[1]**2))), np.arccos((a[0]*c[0]+a[1]*c[1])/(np.sqrt(a[0]**2+a[1]**2)*np.sqrt(c[0]**2+c[1]**2))), np.arccos((c[0]*b[0]+c[1]*b[1])/(np.sqrt(c[0]**2+c[1]**2)*np.sqrt(b[0]**2+b[1]**2))))
     def anropning(self):
         p = []
         for i in range(len(self.element)):
-            a = [self.coordinate[self.element[i][1]][0]-self.coordinate[self.element[i][0]][0],self.coordinate[self.element[i][1]][1]-self.coordinate[self.element[i][0]][1]]
-            b = [self.coordinate[self.element[i][2]][0]-self.coordinate[self.element[i][0]][0],self.coordinate[self.element[i][2]][1]-self.coordinate[self.element[i][0]][1]]
-            c = [self.coordinate[self.element[i][2]][0]-self.coordinate[self.element[i][1]][0],self.coordinate[self.element[i][2]][1]-self.coordinate[self.element[i][1]][1]]
+            a = [self.x2(i)-self.x1(i),self.y2(i)-self.y1(i)]
+            b = [self.x3(i)-self.x1(i),self.y3(i)-self.y1(i)]
+            c = [self.x3(i)-self.x2(i),self.y3(i)-self.y2(i)]
             if min(np.arccos((a[0]*b[0]+a[1]*b[1])/(np.sqrt(a[0]**2+a[1]**2)*np.sqrt(b[0]**2+b[1]**2))), np.arccos((a[0]*c[0]+a[1]*c[1])/(np.sqrt(a[0]**2+a[1]**2)*np.sqrt(c[0]**2+c[1]**2))), np.arccos((c[0]*b[0]+c[1]*b[1])/(np.sqrt(c[0]**2+c[1]**2)*np.sqrt(b[0]**2+b[1]**2))))<0.1:
                 raise TypeError("Bad Angle")
             else:
-                p.append(float(self.coordinate[self.element[i][1]][0]-self.coordinate[self.element[i][0]][0])*(self.coordinate[self.element[i][2]][1]-self.coordinate[self.element[i][0]][1])-(self.coordinate[self.element[i][1]][1]-self.coordinate[self.element[i][0]][1])*(self.coordinate[self.element[i][2]][0]-self.coordinate[self.element[i][0]][0]))
+                p.append((self.x2(i)-self.x1(i))*(self.y3(i)-self.y1(i))-(self.y2(i)-self.y1(i))*(self.x3(i)-self.x1(i)))
         return p
     def f_dash(self):
         anrop = self.anropning()
@@ -31,12 +43,12 @@ class Mesh:
         def f(x,y):
             return 40*x +20*y
         for i in range(len(anrop)):
-            q.append(abs(anrop[i])/6*(f(self.coordinate[self.element[i][0]][0],self.coordinate[self.element[i][0]][1])+f(self.coordinate[self.element[i][1]][0],self.coordinate[self.element[i][1]][1])+f(self.coordinate[self.element[i][2]][0],self.coordinate[self.element[i][2]][1])))
+            q.append(abs(anrop[i])/6*(f(self.x1(i),self.y1(i))+f(self.x2(i),self.y2(i))+f(self.x3(i),self.y3(i))))
         return sum(q)
     def area(self):
         q = []
         for i in range(len(self.element)):
-            q.append(1/2*abs(self.coordinate[self.element[i][0]][0]*(self.coordinate[self.element[i][1]][1]-self.coordinate[self.element[i][2]][1])+self.coordinate[self.element[i][1]][0]*(self.coordinate[self.element[i][2]][1]-self.coordinate[self.element[i][0]][1])+self.coordinate[self.element[i][2]][0]*(self.coordinate[self.element[i][0]][1]-self.coordinate[self.element[i][1]][1])))
+            q.append(1/2*abs(self.x1(i)*(self.y2(i)-self.y3(i))+self.x2(i)*(self.y3(i)-self.y1(i))+self.x3(i)*(self.y1(i)-self.y2(i))))
         return sum(q)
         
 
@@ -63,7 +75,7 @@ Elementnode2_3 = (1.6000000e+001,  1.8000000e+001,  1.8000000e+001,  1.8000000e+
 triangle2 = [[int(a-1), int(b-1), int(c-1)] for a, b, c in zip(Elementnode2_1, Elementnode2_2, Elementnode2_3)]
 coordinates2 = [[a,b] for a, b in zip(Coord2_x, Coord2_y)]
 
-t = Mesh(coordinates,triangle)
+t = Mesh(coordinates,triangle,5)
 v = Mesh(coordinates2, triangle2)
 
 
